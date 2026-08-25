@@ -48,8 +48,8 @@ Its only job: take a photo when told to, save it.
 | Micro SD card module | SPI bus (**shares** SCK/MISO/MOSI with LoRa, own CS on pin 15) | Insurance proof-logging |
 | Piezo buzzer | GPIO 25 | Audible alert (also doubles as hail-impact sensor if reused as input) |
 | RGB LED | GPIO 27 / 32 / 33 | Visual risk color-coding |
-| DFPlayer Mini | UART (2 wires, e.g. GPIO 16/17) | Voice alert in local language |
-| Speaker | Connects directly to DFPlayer Mini's output | Plays the voice alert |
+| ISD1820 voice recorder | Digital pin (e.g. GPIO 26, PLAYE trigger) | Pre-recorded voice alert in local language |
+| Speaker (0.5W) | Connects to ISD1820 SPK+/SPK− output | Plays the pre-recorded voice alert |
 | *(Optional)* Crop-select switch | Digital pin | Adjusts threshold per crop type |
 | *(Optional)* Battery voltage sense | Analog pin, via voltage divider | Low-battery early warning |
 
@@ -83,7 +83,7 @@ Gateway checks thresholds → decides: Normal / Watch / Frost / Fire
         ├─→ LCD shows result
         ├─→ RGB LED changes color
         ├─→ Buzzer sounds (if danger)
-        ├─→ DFPlayer speaks the alert (if danger)
+        ├─→ ISD1820 plays pre-recorded voice alert (if danger)
         ├─→ RTC timestamp + SD card logs the event (insurance record)
         └─→ (optional) Sends "CAPTURE" command to Camera Module
                               ↓
@@ -110,7 +110,7 @@ Sensor Node (DHT22 + LoRa) → Gateway (LCD + buzzer + LoRa) — frost/fire/heat
 **Phase 2 — Confirmed, actively building:**
 - RGB LED (wiring fix pending part)
 - RTC + SD card → insurance logging
-- DFPlayer Mini → voice alert
+- ISD1820 voice recorder → pre-recorded voice alert (trigger via GPIO 26)
 - Predictive rate-of-change algorithm (pure code)
 
 **Phase 3 — Explored in depth, not yet committed to building:**
