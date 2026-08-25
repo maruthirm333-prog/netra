@@ -27,7 +27,7 @@ Sensor Node → LoRa → Gateway → Local Intelligence → Local Alert
 | Board | Hardware | Role |
 |-------|----------|------|
 | 01 Sensor Node | ESP32 + DHT22 + SX1278 LoRa + Solar + 18650 | Measures environment, sends wirelessly |
-| 02 Gateway | ESP32 + LCD + RTC + SD + RGB LED + Buzzer + DFPlayer Mini | Receives, decides, alerts, logs |
+| 02 Gateway | ESP32 + LCD + RTC + SD + RGB LED + Buzzer + ISD1820 | Receives, decides, alerts, logs |
 | 03 Camera Module *(optional)* | ESP32-CAM + IR LEDs | Photo evidence on trigger |
 
 ## Alert States
@@ -44,7 +44,7 @@ Sensor Node → LoRa → Gateway → Local Intelligence → Local Alert
 | Phase | What | Status |
 |-------|------|--------|
 | Phase 1 | Sensor Node + Gateway core — frost/fire/heat detection | ✅ Done & tested |
-| Phase 2 | RGB LED, RTC + SD logging, DFPlayer voice alert, predictive algorithm | 🚧 Active |
+| Phase 2 | RGB LED, RTC + SD logging, ISD1820 voice alert, predictive algorithm | 🚧 Active |
 | Phase 3 | ESP32-CAM, MQ2/IR flame, heartbeat check, low-battery warning | 📋 Planned |
 | Phase 4 | PCB, mesh network, Bluetooth app, government pilot | 🔭 Future |
 
