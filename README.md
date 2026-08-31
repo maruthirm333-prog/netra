@@ -44,11 +44,20 @@ Sensor Node → LoRa → Gateway → Local Intelligence → Local Alert
 | Phase | What | Status |
 |-------|------|--------|
 | Phase 1 | Sensor Node + Gateway core — frost/fire/heat detection | ✅ Done & tested |
-| Phase 2 | RGB LED, RTC + SD logging, ISD1820 voice alert, predictive algorithm | 🚧 Active |
+| Phase 2 | RGB LED, RTC + SD logging, ISD1820 voice alert, predictive algorithm, water level sensor | 🚧 Active |
 | Phase 3 | ESP32-CAM, MQ2/IR flame, heartbeat check, low-battery warning | 📋 Planned |
 | Phase 4 | PCB, mesh network, Bluetooth app, government pilot | 🔭 Future |
 
 → Full breakdown: [docs/architecture.md](docs/architecture.md)
+
+## Firmware
+
+| Board | File | Sensors |
+|-------|------|---------|
+| Zone A Sensor Node | [firmware/zone-a/zone_a_sensor_node.ino](firmware/zone-a/zone_a_sensor_node.ino) | DHT22 · MQ2 · Flame · Vibration · Water level · LoRa |
+| Gateway | Coming soon | LCD · RTC · SD · ISD1820 · RGB LED · LoRa |
+
+LoRa packet format: `ZoneA,temp,humidity,smoke,flame,tamper,waterDistance`
 
 ## What Makes NETRA Different
 
