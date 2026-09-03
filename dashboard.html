@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prahari — Environmental Monitor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  :root {
+    --ink: #0E1A12;
+    --paper: #F0F4F0;
+    --field: #D6E8D6;
+    --muted: #6B7F6E;
+    --green: #2E7D4F;
+    --amber: #B5620A;
+    --red: #B91C1C;
+    --flood: #1D5FAA;
+    --border: #C8D8CA;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Space Grotesk', sans-serif;
+    min-height: 100vh;
+  }
+
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 18px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: white;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-mark {
+    width: 32px;
+    height: 32px;
+    background: var(--green);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .logo-mark svg { width: 18px; height: 18px; fill: white; }
+
+  .logo-text {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .logo-sub {
+    font-size: 12px;
+    color: var(--muted);
+    font-family: 'Space Mono', monospace;
+    margin-top: 1px;
+  }
+
+  .sync-status {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .sync-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    height: calc(100vh - 65px);
+  }
+
+  /* LEFT PANEL */
+  .panel {
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    background: white;
+  }
+
+  .panel-section {
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-label {
+    font-size: 11px;
+    font-family: 'Space Mono', monospace;
+    color: var(--muted);
+    margin-bottom: 14px;
+    letter-spacing: 0.04em;
+  }
+
+  /* ALERT BADGE */
+  .alert-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: 'Space Mono', monospace;
+    letter-spacing: 0.04em;
+  }
+
+  .badge-normal { background: #E6F4EC; color: var(--green); }
+  .badge-fire   { background: #FEE2E2; color: var(--red); }
+  .badge-flood  { background: #DBEAFE; color: var(--flood); }
+  .badge-tamper { background: #FEF3C7; color: var(--amber); }
+  .badge-frost  { background: #E0F2FE; color: #0369A1; }
+  .badge-pollution { background: #F3E8FF; color: #6D28D9; }
+  .badge-anomaly { background: #FFF7ED; color: var(--amber); }
+
+  /* SENSOR READINGS */
+  .readings-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .reading {
+    background: var(--field);
+    border-radius: 8px;
+    padding: 12px 14px;
+  }
+
+  .reading-label {
+    font-size: 10px;
+    font-family: 'Space Mono', monospace;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+
+  .reading-value {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+
+  .reading-unit {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 400;
+    margin-left: 2px;
+  }
+
+  .reading.danger { background: #FEE2E2; }
+  .reading.warn { background: #FEF3C7; }
+  .reading.flood-bg { background: #DBEAFE; }
+
+  /* STATUS INDICATORS */
+  .status-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .status-row:last-child { border-bottom: none; }
+
+  .status-name {
+    font-size: 13px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .status-icon {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+  }
+
+  .s-ok { background: var(--green); }
+  .s-danger { background: var(--red); }
+  .s-warn { background: var(--amber); }
+  .s-flood { background: var(--flood); }
+
+  .status-val {
+    font-family: 'Space Mono', monospace;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  /* LOG */
+  .log-entry {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 12px;
+  }
+
+  .log-entry:last-child { border-bottom: none; }
+
+  .log-time {
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    margin-bottom: 2px;
+  }
+
+  .log-msg { font-weight: 500; }
+
+  /* MAP */
+  #map { width: 100%; height: 100%; }
+
+  .leaflet-container { background: #e8f0e8; }
+
+  /* ZONE MARKER */
+  .zone-marker {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 3px solid white;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    cursor: pointer;
+    transition: transform 0.15s ease;
+  }
+
+  .zone-marker:hover { transform: scale(1.1); }
+  .zone-normal { background: var(--green); }
+  .zone-fire { background: var(--red); }
+  .zone-flood { background: var(--flood); }
+  .zone-tamper { background: var(--amber); }
+  .zone-frost { background: #0369A1; }
+  .zone-pollution { background: #6D28D9; }
+  .zone-anomaly { background: var(--amber); }
+
+  @media (max-width: 768px) {
+    .layout { grid-template-columns: 1fr; grid-template-rows: auto 300px; }
+    .panel { height: auto; }
+    #map { height: 300px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-mark">
+      <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+    </div>
+    <div>
+      <div class="logo-text">Prahari</div>
+      <div class="logo-sub">Environmental Monitor</div>
+    </div>
+  </div>
+  <div class="sync-status">
+    <div class="sync-dot" id="syncDot"></div>
+    <span id="syncTime">Connecting...</span>
+  </div>
+</header>
+
+<div class="layout">
+  <div class="panel">
+
+    <!-- ALERT STATUS -->
+    <div class="panel-section">
+      <div class="section-label">Zone A — current status</div>
+      <div id="alertBadge" class="alert-badge badge-normal">● NORMAL</div>
+    </div>
+
+    <!-- READINGS -->
+    <div class="panel-section">
+      <div class="section-label">Live sensor readings</div>
+      <div class="readings-grid">
+        <div class="reading" id="cardTemp">
+          <div class="reading-label">Temperature</div>
+          <div class="reading-value" id="valTemp">—<span class="reading-unit">°C</span></div>
+        </div>
+        <div class="reading" id="cardHum">
+          <div class="reading-label">Humidity</div>
+          <div class="reading-value" id="valHum">—<span class="reading-unit">%</span></div>
+        </div>
+        <div class="reading" id="cardSmoke">
+          <div class="reading-label">Smoke</div>
+          <div class="reading-value" id="valSmoke">—</div>
+        </div>
+        <div class="reading" id="cardAQ">
+          <div class="reading-label">Air quality</div>
+          <div class="reading-value" id="valAQ">—</div>
+        </div>
+        <div class="reading" id="cardWater">
+          <div class="reading-label">Water dist</div>
+          <div class="reading-value" id="valWater">—<span class="reading-unit">cm</span></div>
+        </div>
+        <div class="reading" id="cardFlame">
+          <div class="reading-label">Flame</div>
+          <div class="reading-value" id="valFlame">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STATUS LIST -->
+    <div class="panel-section">
+      <div class="section-label">Sensor status</div>
+      <div class="status-row">
+        <span class="status-name"><span class="status-icon s-ok" id="dotFlame"></span>Flame sensor</span>
+        <span class="status-val" id="stFlame">—</span>
+      </div>
+      <div class="status-row">
+        <span class="status-name"><span class="status-icon s-ok" id="dotWater"></span>Water level</span>
+        <span class="status-val" id="stWater">—</span>
+      </div>
+      <div class="status-row">
+        <span class="status-name"><span class="status-icon s-ok" id="dotTamper"></span>Tamper</span>
+        <span class="status-val" id="stTamper">—</span>
+      </div>
+      <div class="status-row">
+        <span class="status-name"><span class="status-icon s-ok" id="dotTemp"></span>Temperature</span>
+        <span class="status-val" id="stTemp">—</span>
+      </div>
+    </div>
+
+    <!-- RECENT ALERTS LOG -->
+    <div class="panel-section">
+      <div class="section-label">Recent alerts</div>
+      <div id="logContainer">
+        <div class="log-entry">
+          <div class="log-time">Waiting for data...</div>
+          <div class="log-msg">No alerts yet</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- MAP -->
+  <div id="map"></div>
+</div>
+
+<script>
+// ThingSpeak config
+const CHANNEL_ID  = '3478594';
+const READ_KEY    = '6XGD5B2JBEC3ZIME';
+const REFRESH_MS  = 15000;
+
+// Farm location — Hassan, Karnataka (you can update with real GPS later)
+const FARM_LAT  = 13.0050;
+const FARM_LNG  = 76.1000;
+
+// Log history
+const alertLog = [];
+
+// Map setup
+const map = L.map('map', { zoomControl: true }).setView([FARM_LAT, FARM_LNG], 15);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© OpenStreetMap',
+  maxZoom: 19
+}).addTo(map);
+
+// Zone A marker
+let markerIcon = L.divIcon({
+  html: '<div class="zone-marker zone-normal">🌿</div>',
+  className: '',
+  iconSize: [48, 48],
+  iconAnchor: [24, 24]
+});
+
+const marker = L.marker([FARM_LAT, FARM_LNG], { icon: markerIcon })
+  .addTo(map)
+  .bindPopup('<b>Zone A</b><br>Sensor node');
+
+marker.openPopup();
+
+// Gateway marker
+const gatewayIcon = L.divIcon({
+  html: '<div style="background:#0E1A12;color:white;border-radius:4px;padding:4px 8px;font-size:11px;font-family:monospace;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.3)">🏠 Gateway</div>',
+  className: '',
+  iconAnchor: [40, 12]
+});
+
+L.marker([FARM_LAT - 0.0008, FARM_LNG + 0.001], { icon: gatewayIcon })
+  .addTo(map)
+  .bindPopup('<b>Gateway</b><br>Farmhouse alert unit');
+
+// LoRa range circle
+L.circle([FARM_LAT, FARM_LNG], {
+  radius: 1000,
+  color: '#2E7D4F',
+  fillColor: '#2E7D4F',
+  fillOpacity: 0.04,
+  weight: 1,
+  dashArray: '4 4'
+}).addTo(map).bindPopup('LoRa coverage — ~1km radius');
+
+function getAlertClass(alert) {
+  if (alert.includes('FIRE'))       return 'badge-fire';
+  if (alert.includes('FLOOD'))      return 'badge-flood';
+  if (alert.includes('TAMPER'))     return 'badge-tamper';
+  if (alert.includes('FROST'))      return 'badge-frost';
+  if (alert.includes('POLLUTION'))  return 'badge-pollution';
+  if (alert.includes('ANOMALY'))    return 'badge-anomaly';
+  return 'badge-normal';
+}
+
+function getZoneClass(alert) {
+  if (alert.includes('FIRE'))      return 'zone-fire';
+  if (alert.includes('FLOOD'))     return 'zone-flood';
+  if (alert.includes('TAMPER'))    return 'zone-tamper';
+  if (alert.includes('FROST'))     return 'zone-frost';
+  if (alert.includes('POLLUTION')) return 'zone-pollution';
+  if (alert.includes('ANOMALY'))   return 'zone-anomaly';
+  return 'zone-normal';
+}
+
+function getZoneEmoji(alert) {
+  if (alert.includes('FIRE'))      return '🔥';
+  if (alert.includes('FLOOD'))     return '🌊';
+  if (alert.includes('TAMPER'))    return '⚠️';
+  if (alert.includes('FROST'))     return '❄️';
+  if (alert.includes('POLLUTION')) return '💨';
+  if (alert.includes('ANOMALY'))   return '📊';
+  return '🌿';
+}
+
+function addLog(msg, alertType) {
+  const now = new Date();
+  const time = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  alertLog.unshift({ time, msg, alertType });
+  if (alertLog.length > 10) alertLog.pop();
+
+  const container = document.getElementById('logContainer');
+  container.innerHTML = alertLog.map(e => `
+    <div class="log-entry">
+      <div class="log-time">${e.time}</div>
+      <div class="log-msg">${e.msg}</div>
+    </div>
+  `).join('');
+}
+
+let lastAlert = '';
+
+async function fetchData() {
+  try {
+    const res = await fetch(
+      `https://api.thingspeak.com/channels/${CHANNEL_ID}/feeds/last.json?api_key=${READ_KEY}`
+    );
+    const d = await res.json();
+    const f = d.fields || d;
+
+    const temp      = parseFloat(d.field1) || 0;
+    const hum       = parseFloat(d.field2) || 0;
+    const smoke     = parseInt(d.field3)   || 0;
+    const flame     = parseInt(d.field4);
+    const tamper    = parseInt(d.field5);
+    const aq        = parseInt(d.field6)   || 0;
+    const waterDist = parseFloat(d.field7) || -1;
+
+    // Decide alert
+    let alert = 'NORMAL';
+    if (flame === 0)                       alert = 'FIRE';
+    else if (waterDist > 0 && waterDist < 20) alert = 'FLOOD';
+    else if (tamper === 1)                 alert = 'TAMPER';
+    else if (temp <= 2)                    alert = 'FROST';
+    else if (aq > 1500)                    alert = 'POLLUTION';
+
+    // Update badge
+    const badge = document.getElementById('alertBadge');
+    badge.className = 'alert-badge ' + getAlertClass(alert);
+    badge.textContent = '● ' + alert;
+
+    // Update readings
+    document.getElementById('valTemp').innerHTML  = temp.toFixed(1) + '<span class="reading-unit">°C</span>';
+    document.getElementById('valHum').innerHTML   = hum.toFixed(1)  + '<span class="reading-unit">%</span>';
+    document.getElementById('valSmoke').innerHTML = smoke;
+    document.getElementById('valAQ').innerHTML    = aq;
+    document.getElementById('valWater').innerHTML = waterDist > 0 ? waterDist.toFixed(1) + '<span class="reading-unit">cm</span>' : 'No signal';
+    document.getElementById('valFlame').innerHTML = flame === 0 ? 'Detected' : 'Clear';
+
+    // Card colors
+    document.getElementById('cardTemp').className  = 'reading' + (temp <= 2 ? ' danger' : '');
+    document.getElementById('cardWater').className = 'reading' + (waterDist > 0 && waterDist < 20 ? ' flood-bg' : '');
+    document.getElementById('cardFlame').className = 'reading' + (flame === 0 ? ' danger' : '');
+
+    // Status dots
+    const setDot = (id, val, dangerClass) => {
+      document.getElementById(id).className = 'status-icon ' + dangerClass;
+    };
+    setDot('dotFlame',  flame,      flame === 0 ? 's-danger' : 's-ok');
+    setDot('dotWater',  waterDist,  (waterDist > 0 && waterDist < 20) ? 's-flood' : 's-ok');
+    setDot('dotTamper', tamper,     tamper === 1 ? 's-warn' : 's-ok');
+    setDot('dotTemp',   temp,       temp <= 2 ? 's-danger' : 's-ok');
+
+    document.getElementById('stFlame').textContent  = flame === 0 ? 'FIRE DETECTED' : 'Clear';
+    document.getElementById('stWater').textContent  = waterDist > 0 ? waterDist.toFixed(0) + 'cm' : 'No signal';
+    document.getElementById('stTamper').textContent = tamper === 1 ? 'TRIGGERED' : 'Clear';
+    document.getElementById('stTemp').textContent   = temp.toFixed(1) + '°C';
+
+    // Update map marker
+    const newIcon = L.divIcon({
+      html: `<div class="zone-marker ${getZoneClass(alert)}">${getZoneEmoji(alert)}</div>`,
+      className: '',
+      iconSize: [48, 48],
+      iconAnchor: [24, 24]
+    });
+    marker.setIcon(newIcon);
+    marker.setPopupContent(`<b>Zone A</b><br>${alert}<br>Temp: ${temp.toFixed(1)}°C<br>Water: ${waterDist > 0 ? waterDist.toFixed(0) + 'cm' : 'No signal'}`);
+
+    // Log if alert changed
+    if (alert !== lastAlert) {
+      const msgs = {
+        FIRE: '🔥 Fire detected at Zone A',
+        FLOOD: '🌊 Flood risk at Zone A',
+        TAMPER: '⚠️ Tamper detected at Zone A',
+        FROST: '❄️ Frost risk at Zone A',
+        POLLUTION: '💨 Poor air quality at Zone A',
+        NORMAL: '✅ Zone A returned to normal'
+      };
+      addLog(msgs[alert] || alert + ' at Zone A', alert);
+      lastAlert = alert;
+    }
+
+    // Sync status
+    const now = new Date();
+    document.getElementById('syncTime').textContent =
+      'Synced ' + now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    document.getElementById('syncDot').style.background = '#2E7D4F';
+
+  } catch (err) {
+    console.error('Fetch error:', err);
+    document.getElementById('syncTime').textContent = 'Connection failed';
+    document.getElementById('syncDot').style.background = '#B91C1C';
+  }
+}
+
+// First fetch + interval
+fetchData();
+setInterval(fetchData, REFRESH_MS);
+</script>
+</body>
+</html>
