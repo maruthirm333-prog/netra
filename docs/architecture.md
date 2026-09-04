@@ -132,3 +132,63 @@ Sensor Node (DHT22 + LoRa) → Gateway (LCD + buzzer + LoRa) — frost/fire/heat
 ## The One Thing to Remember
 
 However many features this list grows to, **the underlying pattern never changes**: Sensor Node measures and sends → Gateway receives, decides, and acts. Every single feature you add is just the Gateway doing one more thing when it makes that decision. If you ever feel confused about how a new idea fits in, ask: "does this belong on the Sensor Node (something to measure) or the Gateway (something to decide or display)?" — that answers it every time.
+
+
+---
+
+## ThingSpeak Integration (Phase 2 addition)
+
+Channel: **Prahari Monitor**
+
+| ThingSpeak Field | Sensor / Feature | Unit |
+|-----------------|-----------------|------|
+| Field 1 | Temperature | °C |
+| Field 2 | Humidity | % |
+| Field 3 | Water Distance | cm |
+| Field 4 | Fire Confidence | % |
+| Field 5 | Flood Confidence | % |
+| Field 6 | Frost Confidence | % |
+| Field 7 | Landslide Confidence | % |
+| Field 8 | Pollution Confidence | % |
+
+---
+
+## AI Confidence Scoring — Gateway Logic (Phase 2 addition)
+
+Instead of binary ALERT / NO ALERT, the Gateway computes a **confidence percentage** for each hazard type using multiple sensor inputs weighted together.
+
+| Hazard | Inputs used | Output |
+|--------|------------|--------|
+| Fire | Flame sensor + MQ2 smoke + temperature rate-of-change | Fire Confidence % |
+| Flood | Water distance + rain trend | Flood Confidence % |
+| Frost | Temperature + humidity + time-of-day | Frost Confidence % |
+| Landslide | Vibration count over rolling window | Landslide Confidence % |
+| Pollution | MQ2 ADC baseline drift | Pollution Confidence % |
+
+Alert triggers when confidence crosses threshold (e.g. >70%).
+
+---
+
+## Pending Hardware (bring + wire before next code session)
+
+| Sensor | Purpose | Zone |
+|--------|---------|------|
+| TDS sensor | Water quality / pollution detection | Zone A |
+
+## Deferred to Next Phase
+
+| Feature | Reason |
+|---------|--------|
+| Zone B sensor node | Hardware not ready — present as "next phase" to judges |
+| Landslide counter (Zone A firmware update) | Code ready, pending TDS session |
+
+---
+
+## Flood Detection — Deployment Note
+
+JSN-SR04T minimum range: **20cm**. Anything closer returns garbage (399/400).
+
+For field deployment: mount probe on a pole **≥ 50cm above** normal water level of drain/canal.
+For demo: point straight down at floor from 60–80cm, use hand to simulate rising water.
+
+See [build-log entry 002](https://github.com/maruthirm333-prog/build-log/blob/main/entries/002-jsn-sr04t-minimum-range.md) for full debug notes.
