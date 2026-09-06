@@ -4,18 +4,20 @@
 
 > Intelligence where the Internet cannot reach.
 
-NETRA is a fully offline environmental monitoring and safety system built for remote farms, forest-edge communities, and isolated settlements where cellular networks and internet connectivity cannot be relied upon.
+NETRA is a fully offline environmental monitoring and safety system for remote farms, forest-edge communities, and isolated settlements — where cellular networks and internet cannot be relied upon.
 
-🌐 **Live landing page:** [maruthirm333-prog.github.io/netra](https://maruthirm333-prog.github.io/netra/)
-📐 **System architecture:** [docs/architecture.md](docs/architecture.md)
+🌐 **Landing page:** [maruthirm333-prog.github.io/netra](https://maruthirm333-prog.github.io/netra/)
+📊 **Dashboard:** [maruthirm333-prog.github.io/netra/dashboard.html](https://maruthirm333-prog.github.io/netra/dashboard.html)
+📐 **Architecture:** [docs/architecture.md](docs/architecture.md)
+🏆 **SIH 2026:** Problem ID SIH26178 (Qualcomm Inc.) — [Presentation guide](docs/sih-2026/presentation-guide.md)
 
 ---
 
 ## The Problem
 
-The places that need environmental warnings most — remote farms, tribal communities, off-grid settlements — are often the hardest to connect. Conventional IoT systems silently assume a working internet chain that simply does not exist there.
+The places that need environmental warnings most — remote farms, tribal communities, off-grid settlements — are the hardest to connect. Conventional IoT silently assumes a working internet chain that simply does not exist there.
 
-## The Solution — NETRA Architecture
+## Architecture
 
 ```
 Sensor Node → LoRa → Gateway → Local Intelligence → Local Alert
@@ -26,49 +28,49 @@ Sensor Node → LoRa → Gateway → Local Intelligence → Local Alert
 
 | Board | Hardware | Role |
 |-------|----------|------|
-| 01 Sensor Node | ESP32 + DHT22 + SX1278 LoRa + Solar + 18650 | Measures environment, sends wirelessly |
+| 01 Sensor Node | ESP32 + DHT22 + MQ2 + Flame + Vibration + Water level + LoRa | Measures 6 parameters, sends wirelessly |
 | 02 Gateway | ESP32 + LCD + RTC + SD + RGB LED + Buzzer + ISD1820 | Receives, decides, alerts, logs |
-| 03 Camera Module *(optional)* | ESP32-CAM + IR LEDs | Photo evidence on trigger |
+| 03 Camera *(optional)* | ESP32-CAM + IR LEDs | Photo evidence on trigger |
+
+## LoRa Packet Format
+
+```
+ZoneA,temperature,humidity,smoke,flame,tamper,waterDistance
+```
 
 ## Alert States
 
 | State | Condition | Output |
 |-------|-----------|--------|
-| 🟢 Normal | Temp 2–30°C, RH OK | Green LED, silent |
+| 🟢 Normal | Temp 2–30°C | Green LED, silent |
 | 🟡 Heat Watch | Temp 30–42°C | Amber LED, voice warning |
 | 🔴 Frost Alert | Temp ≤ 2°C | Red LED + buzzer + voice + SD log |
 | 🔴 Fire Alert | Temp ≥ 42°C | Red LED + buzzer + voice + SD log |
+| 🔴 Flood Alert | Water distance < threshold | Red LED + buzzer + voice + SD log |
 
 ## Build Status
 
 | Phase | What | Status |
 |-------|------|--------|
-| Phase 1 | Sensor Node + Gateway core — frost/fire/heat detection | ✅ Done & tested |
-| Phase 2 | RGB LED, RTC + SD logging, ISD1820 voice alert, predictive algorithm, water level sensor | 🚧 Active |
-| Phase 3 | ESP32-CAM, MQ2/IR flame, heartbeat check, low-battery warning | 📋 Planned |
+| Phase 1 | Sensor Node + Gateway — frost/fire/heat detection | ✅ Done & tested |
+| Phase 2 | RGB LED, RTC + SD logging, ISD1820 voice, predictive AI, water level | 🚧 Active |
+| Phase 3 | ESP32-CAM, MQ2+flame, TDS sensor, heartbeat check | 📋 Planned |
 | Phase 4 | PCB, mesh network, Bluetooth app, government pilot | 🔭 Future |
-
-→ Full breakdown: [docs/architecture.md](docs/architecture.md)
 
 ## Firmware
 
 | Board | File | Sensors |
 |-------|------|---------|
 | Zone A Sensor Node | [firmware/zone-a/zone_a_sensor_node.ino](firmware/zone-a/zone_a_sensor_node.ino) | DHT22 · MQ2 · Flame · Vibration · Water level · LoRa |
-| Gateway | Coming soon | LCD · RTC · SD · ISD1820 · RGB LED · LoRa |
+| Gateway | *Coming after TDS session* | LCD · RTC · SD · ISD1820 · RGB LED · LoRa |
 
-LoRa packet format: `ZoneA,temp,humidity,smoke,flame,tamper,waterDistance`
+## Docs
 
-## What Makes NETRA Different
-
-**Conventional IoT needs:** SIM card · Data plan · Cellular coverage · Cloud hosting · App
-
-**NETRA needs (ongoing):** Nothing. Local sensing → local comms → local intelligence → local alert.
-
-## Team
-
-4-member ECE engineering team — Malnad College of Engineering, Hassan, Karnataka, India.
+| Document | Contents |
+|----------|---------|
+| [docs/architecture.md](docs/architecture.md) | Full 3-board system, ThingSpeak fields, AI confidence scoring |
+| [docs/sih-2026/presentation-guide.md](docs/sih-2026/presentation-guide.md) | 6-slide structure, speaking notes, submission checklist |
 
 ## Part of
 
-[RuralSense Labs](https://github.com/maruthirm333-prog/ruralsense-labs)
+[RuralSense Labs](https://github.com/maruthirm333-prog/ruralsense-labs) · Built in Hassan, Karnataka, India
