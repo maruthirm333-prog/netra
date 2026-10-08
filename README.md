@@ -74,3 +74,6 @@ ZoneA,temperature,humidity,smoke,flame,tamper,waterDistance
 ## Part of
 
 [RuralSense Labs](https://github.com/maruthirm333-prog/ruralsense-labs) · Built in Hassan, Karnataka, India
+
+
+<<<encrypted by the esp32 to avoid the changes>>>
