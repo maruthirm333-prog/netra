@@ -77,3 +77,15 @@ ZoneA,temperature,humidity,smoke,flame,tamper,waterDistance
 
 
 <<<encrypted by the esp32 to avoid the changes>>>
+
+
+
+{{{
+
+
+
+FAILED IN NATIONAL LEVEL BUT SURE WE WILL WON ONE DAY
+
+
+
+}}}
